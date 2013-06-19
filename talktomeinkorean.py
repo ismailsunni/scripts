@@ -14,6 +14,7 @@ __email__ = 'imajimatika@gmail.com'
 __status__ = 'Prototype'
 __date__ = '19 June 2013'
 
+import sys
 import urllib
 
 def download_audio(level, lesson, filename=None):
@@ -42,5 +43,25 @@ def download_pdf(level, lesson, filename=None):
     print urllib.urlretrieve(source_file, filename)
     print '[+] Saved to ' + filename
 
+def usage():
+    print 'Usage: python talktomeinkorean.py [both/pdf/audio] [level] [lesson]'
+    sys.exit()
+
+def main():
+    num_argv = len(sys.argv)
+    if num_argv != 4:
+        usage()
+    # parameter
+    files = sys.argv[1]
+    level = sys.argv[2]
+    lesson = sys.argv[3]
+    print 'Parameters: %s, %s, %s' % (files, lesson, level)
+    if files == 'both' or files == 'audio':
+        download_audio(lesson, level)
+    if files == 'both' or files == 'pdf':
+        download_pdf(lesson, level)
+
+
 if __name__ == '__main__':
-    download_pdf(1, 100)
+    # download_pdf(1, 100)
+    main()
