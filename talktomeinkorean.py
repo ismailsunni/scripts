@@ -86,23 +86,23 @@ def main():
         files = sys.argv[1]
         level = sys.argv[2]
         lesson = sys.argv[3]
-        print 'Parameters: %s, %s, %s' % (files, lesson, level)
+        print 'Parameters: %s, %s, %s' % (files, level, lesson)
         if files == 'both' or files == 'audio':
-            download_audio(lesson, level)
+            download_audio(level, lesson)
         if files == 'both' or files == 'pdf':
-            download_pdf(lesson, level)
+            download_pdf(level, lesson)
     elif num_argv == 3:
         # parameter
         files = sys.argv[1]
         level = sys.argv[2]
-        print 'Parameters: %s, %s' % (files, lesson)
+        print 'Parameters: %s, %s' % (files, level)
         if files == 'both' or files == 'audio':
-            download_audios(lesson)
+            download_audios(level)
         if files == 'both' or files == 'pdf':
-            download_pdfs(lesson)
+            download_pdfs(level)
 
 
 if __name__ == '__main__':
     # download_pdf(1, 100)
-    # main()
-    download_audios(1)
+    main()
+    # download_audios(1)
