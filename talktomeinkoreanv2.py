@@ -7,7 +7,7 @@ http://www.talktomeinkorean.com/support/
 
 __author__ = 'Ismail Sunni'
 __copyright__ = 'Ismail Sunni'
-__license__ = 'GPL'
+__license__ = 'MIT'
 __version__ = '0.0.1'
 __maintainer__ = 'Ismail Sunni'
 __email__ = 'imajimatika@gmail.com'
