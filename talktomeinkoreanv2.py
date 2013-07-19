@@ -20,11 +20,15 @@ from BeautifulSoup import BeautifulSoup
 
 URL_BASE_CURRICULUM = 'http://www.talktomeinkorean.com/curriculum'
 
-def mkdir(level, lesson):
-    """Create directory TTMIK/level/lesson if not exist
+def mkdir(pardir, level, lesson):
+    """Create directory pardir/level/lesson if not exist
+    There are two known pardir, htmlpage and TTMIK
+    htmlpage is used for storing temporary htmlpage
+    TTMIK is used for storing mp3 and pdf file
     """
-    dir_path = os.path.join('TTMIK', str(level), str(lesson))
-    os.makedirs(dir_path)
+    dir_path = os.path.join(pardir, str(level), str(lesson))
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
 
 def is_valid(level, lesson):
     """Check if a level and lesson is valid
@@ -72,8 +76,11 @@ def get_lesson_url(level, lesson):
 def get_mp3_url(lesson_url, level, lesson):
     """Return mp3 url from a page url.
     """
-    lesson_bs = get_page_soup(lesson_url, 'level%slesson%s.html' % (level,
-    lesson))
+    mkdir('htmlpage', level, lesson)
+    temp_html_file = 'level%slesson%s.html' % (level, lesson)
+    temp_html_page = os.path.join('htmlpage', str(level), str(lesson),
+                                  temp_html_file)
+    lesson_bs = get_page_soup(lesson_url, temp_html_page)
     lesson_a = lesson_bs.findAll('a')
     mp3_links = []
     for a in lesson_a:
@@ -89,22 +96,22 @@ def get_local_path(level, lesson, type_file):
     filename =  'level%slesson%s.%s' % (level, lesson, type_file)
     return os.path.join('TTMIK', str(level), str(lesson), filename) 
 
-def download_mp3(mp3_url, level, lesson):
+def download(mp3_url, level, lesson):
     """Download a mp3 file from a link, and put it under TTMIK/level/lesson
     directory.
     """
-    mkdir(level, lesson)
+    mkdir('TTMIK', level, lesson)
     local_path = get_local_path(level, lesson, 'mp3')
     print local_path
     urllib.urlretrieve(mp3_url, local_path)
 
 def main():
-    level = 7
-    lesson = 30
+    level = 1
+    lesson = 1
     lesson_url = get_lesson_url(level, lesson)
     print lesson_url
     mp3_url = get_mp3_url(lesson_url, level, lesson)
-    download_mp3(mp3_url, level, lesson)
+    download(mp3_url, level, lesson)
 
 if __name__ == '__main__':
     main()
