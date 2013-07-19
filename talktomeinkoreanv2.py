@@ -80,6 +80,7 @@ def get_mp3_url(lesson_url, level, lesson):
     temp_html_file = 'level%slesson%s.html' % (level, lesson)
     temp_html_page = os.path.join('htmlpage', str(level), str(lesson),
                                   temp_html_file)
+    print lesson_url
     lesson_bs = get_page_soup(lesson_url, temp_html_page)
     lesson_a = lesson_bs.findAll('a')
     mp3_links = []
@@ -96,22 +97,29 @@ def get_local_path(level, lesson, type_file):
     filename =  'level%slesson%s.%s' % (level, lesson, type_file)
     return os.path.join('TTMIK', str(level), str(lesson), filename) 
 
-def download(mp3_url, level, lesson):
-    """Download a mp3 file from a link, and put it under TTMIK/level/lesson
+def download(file_url, level, lesson, type_file):
+    """Download a file from a link, and put it under TTMIK/level/lesson
     directory.
     """
     mkdir('TTMIK', level, lesson)
-    local_path = get_local_path(level, lesson, 'mp3')
-    print local_path
-    urllib.urlretrieve(mp3_url, local_path)
+    local_path = get_local_path(level, lesson, type_file)
+    print 'Downloading %s to %s' % (file_url, local_path)
+    if os.path.exists(local_path):
+        print 'already exist, do not download'
+        return
+    urllib.urlretrieve(file_url, local_path)
+    print 'Done'
 
 def main():
-    level = 1
-    lesson = 1
-    lesson_url = get_lesson_url(level, lesson)
-    print lesson_url
-    mp3_url = get_mp3_url(lesson_url, level, lesson)
-    download(mp3_url, level, lesson)
+    for level in xrange(1, 8):
+        for lesson in xrange(1, 31):
+           lesson_url = get_lesson_url(level, lesson)
+           mp3_url = get_mp3_url(lesson_url, level, lesson)
+           print 'mp3_url', mp3_url
+           try:
+               download(mp3_url, level, lesson, 'mp3')
+           except Exception, e:
+                print level, lesson, e
 
 if __name__ == '__main__':
     main()
