@@ -15,10 +15,12 @@ __status__ = 'Prototype'
 __date__ = '16 July 2013'
 
 import urllib
+import urllib2
 import os
 from BeautifulSoup import BeautifulSoup
 
 URL_BASE_CURRICULUM = 'http://www.talktomeinkorean.com/curriculum'
+
 
 def mkdir(pardir, level, lesson):
     """Create directory pardir/level/lesson if not exist
@@ -73,23 +75,23 @@ def get_lesson_url(level, lesson):
     index = get_index(level, lesson)
     return list_link[index - 1]
 
-def get_mp3_url(lesson_url, level, lesson):
-    """Return mp3 url from a page url.
+def get_file_url(lesson_url, level, lesson, file_type):
+    """Return file url from a page url.
+    file type: mp3 or pdf
     """
     mkdir('htmlpage', level, lesson)
     temp_html_file = 'level%slesson%s.html' % (level, lesson)
     temp_html_page = os.path.join('htmlpage', str(level), str(lesson),
                                   temp_html_file)
-    print lesson_url
     lesson_bs = get_page_soup(lesson_url, temp_html_page)
     lesson_a = lesson_bs.findAll('a')
-    mp3_links = []
+    file_urls = []
     for a in lesson_a:
-        if 'mp3' in str(a):
-            mp3_links.append(a.get('href'))
+        if file_type in str(a):
+            file_urls.append(a.get('href'))
 
-    # Assume the first link with mp3 is the correct one 
-    return mp3_links[0]
+    # Assume the first link with file_type is the correct one 
+    return file_urls[0]
 
 def get_local_path(level, lesson, type_file):
     """Return a file path to a file
@@ -105,21 +107,65 @@ def download(file_url, level, lesson, type_file):
     local_path = get_local_path(level, lesson, type_file)
     print 'Downloading %s to %s' % (file_url, local_path)
     if os.path.exists(local_path):
-        print 'already exist, do not download'
+        print 'Already exist, not downloading'
         return
     urllib.urlretrieve(file_url, local_path)
     print 'Done'
 
+def download2(file_url, level, lesson, type_file):
+    """Download a file from a link, and put it under TTMIK/level/lesson
+    directory. With "progress bar"
+    source : http://stackoverflow.com/a/22776/1198772 
+    """
+    mkdir('TTMIK', level, lesson)
+    local_path = get_local_path(level, lesson, type_file)
+    if os.path.exists(local_path):
+        print 'Already exist, not downloading'
+        return
+    u = urllib2.urlopen(file_url)
+    f = open(local_path, 'wb')
+    meta = u.info()
+    file_size = int(meta.getheaders("Content-Length")[0])
+    print "Downloading: %s Bytes: %s" % (local_path, file_size)
+
+    file_size_dl = 0
+    block_sz = 8192
+    while True:
+        buffer = u.read(block_sz)
+        if not buffer:
+            break
+
+        file_size_dl += len(buffer)
+        f.write(buffer)
+        status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
+        status = status + chr(8)*(len(status)+1)
+        print status,
+
+    f.close()
+
+def get_file(level, lesson, file_type):
+    """Wrap method to download file
+    """
+    msg = 'level: %s; lesson: %s; file type: %s' % (level, lesson, file_type)
+    print 'Processing ' + msg
+    lesson_url = get_lesson_url(level, lesson)
+    if lesson_url is None:
+        print 'Lesson URL is None'
+        return
+    if file_type in ['mp3', 'pdf']:
+        file_url = get_file_url(lesson_url, level, lesson, file_type)
+        try:
+            download2(file_url, level, lesson, file_type)
+        except Exception, e:
+            print 'Exception ' + str(e) +  ' occurs for ' + msg
+    else:
+        print 'File type %s is not recognized.' % file_type
+
+
 def main():
-    for level in xrange(1, 8):
+    for level in xrange(1, 2):
         for lesson in xrange(1, 31):
-           lesson_url = get_lesson_url(level, lesson)
-           mp3_url = get_mp3_url(lesson_url, level, lesson)
-           print 'mp3_url', mp3_url
-           try:
-               download(mp3_url, level, lesson, 'mp3')
-           except Exception, e:
-                print level, lesson, e
+            get_file(level, lesson, 'mp3')
 
 if __name__ == '__main__':
     main()
