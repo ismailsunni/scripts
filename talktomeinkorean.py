@@ -79,13 +79,13 @@ def usage():
 
 def main():
     num_argv = len(sys.argv)
-    if num_argv > 4:
+    if num_argv > 4 or num_argv < 3:
         usage()
     elif num_argv == 4:
         # parameter
         files = sys.argv[1]
-        level = sys.argv[2]
-        lesson = sys.argv[3]
+        level = int(sys.argv[2])
+        lesson = int(sys.argv[3])
         print 'Parameters: %s, %s, %s' % (files, level, lesson)
         if files == 'both' or files == 'audio':
             download_audio(level, lesson)
@@ -94,7 +94,7 @@ def main():
     elif num_argv == 3:
         # parameter
         files = sys.argv[1]
-        level = sys.argv[2]
+        level = int(sys.argv[2])
         print 'Parameters: %s, %s' % (files, level)
         if files == 'both' or files == 'audio':
             download_audios(level)
