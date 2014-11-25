@@ -20,11 +20,12 @@ def get_full_map(uri, base_name=None, layers=None):
     print 'Get map for %s' % uri
 
     # Get the wms object
-    wms = WebMapService(uri, version='1.1.1')
+    wms = WebMapService(uri)
 
     # Get random layer if not specified
     if not layers:
-        layers = [random.choice(list(wms.contents))]
+        # layers = [random.choice(list(wms.contents))]
+        layers = list(wms.contents)
     print 'layers', layers
     
     # Set crs
@@ -47,7 +48,7 @@ def get_full_map(uri, base_name=None, layers=None):
     # Get the image
     image = wms.getmap(
         layers=layers,
-        styles=[''],
+        styles=[''] * len(layers),  # This is important
         srs=srs,
         bbox=bbox,
         size=(300, 300),
@@ -70,14 +71,14 @@ def get_full_map(uri, base_name=None, layers=None):
 
 def main():
     wms = {
-        'wms_kartoza' : 'http://maps.kartoza.com/cgi-bin/qgis_mapserv.fcgi?map=/web/Boosmansbos/Boosmansbos.qgs&SERVICE=WMS&VERSION=1.1.1',
+        # 'wms_kartoza' : 'http://maps.kartoza.com/cgi-bin/qgis_mapserv.fcgi?map=/web/Boosmansbos/Boosmansbos.qgs&SERVICE=WMS&VERSION=1.1.1',
         # 'wms_massgis' : 'http://giswebservices.massgis.state.ma.us/geoserver/wms',
         # 'wms_lab_metacarta' : 'http://labs.metacarta.com/wms/vmap0',
         # 'wms_nasa' : 'http://wms.jpl.nasa.gov/wms.cgi',
         # 'wms_pop_density' : 'http://beta.sedac.ciesin.columbia.edu/mapserver/wms/gpw2000',
         # 'wms_human_footprint' : 'http://beta.sedac.ciesin.columbia.edu/mapserver/wms/hfoot',
         # 'wms_NYC_freemap' : 'http://nyc.freemap.in/cgi-bin/mapserv?MAP=/www/freemap.in/nyc/map/basemap.map',
-        # 'wms_dm_solutions' : 'http://www2.dmsolutions.ca/cgi-bin/mswms_gmap',
+        'wms_dm_solutions' : 'http://www2.dmsolutions.ca/cgi-bin/mswms_gmap',
         # 'wms_boston_freemaps' : 'http://boston.freemap.in/cgi-bin/mapserv',
         # 'wms_cia_world_factbook' : 'http://world.freemap.in/cgi-bin/mapserv?map=/www/freemap.in/world/map/factbook.map',
         # 'wms_topomaps' : 'http://terraservice.net/ogcmap.ashx',
