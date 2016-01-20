@@ -1,15 +1,23 @@
+# coding=utf-8
+"""Changing raster layer transparency via python in QGIS.
+
+author: Ismail Sunni (imajimatika@gmail.com)
+created: 18 January 2016
+"""
+
 from qgis.core import QgsRasterTransparency
 
 print 'Start'
-active_layer = l = qgis.utils.iface.mapCanvas().currentLayer()
-raster_transpareny  = active_layer.renderer().rasterTransparency()
-ltr = QgsRasterTransparency.TransparentSingleValuePixel()
-tr_list = []
-ltr.min = 0
-ltr.max = 0
-ltr.percentTransparent = 50
-tr_list.append(ltr)
-active_layer.renderer().rasterTransparency().setTransparentSingleValuePixelList(tr_list)
 
+transparency = QgsRasterTransparency.TransparentSingleValuePixel()
+transparencies = []
+transparency.min = 0
+transparency.max = 0
+transparency.percentTransparent = 50
+transparencies.append(transparency)
+
+active_layer = qgis.utils.iface.mapCanvas().currentLayer()
+active_layer.renderer().rasterTransparency().setTransparentSingleValuePixelList(transparencies)
 active_layer.triggerRepaint()
+
 print 'Finish'
