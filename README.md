@@ -1,4 +1,4 @@
 scripts
 =======
 
-To lazy to do something
+To lazy to do something.
