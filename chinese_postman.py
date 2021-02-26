@@ -5,9 +5,10 @@ Implementing chinese postman solver with pure Python.
 NOT_CONNECTED = 999
 
 class Graph:
-    def __init__(self):
+    def __init__(self, directed=False):
         self.nodes = []
         self.adjacency_matrix = []
+        self.directed = directed
 
     def add_edge(self, node1, node2, weight):
         if node1 not in self.nodes:
@@ -24,15 +25,17 @@ class Graph:
             for i in range(len(self.adjacency_matrix)):
                 self.adjacency_matrix[i].append(NOT_CONNECTED)
         self.adjacency_matrix[self.nodes.index(node1)][self.nodes.index(node2)] = weight
+        if not self.directed:
+            self.adjacency_matrix[self.nodes.index(node2)][self.nodes.index(node1)] = weight
 
     def print_graph(self):
-        print('Nodes:')
-        print(','.join(self.nodes))
-        print('Adjacency matrix')
+        print('Directed: %s' % self.directed)
+        print('Nodes: %s' % ','.join(self.nodes))
+        print('Adjacency matrix:')
         for i in range(len(self.nodes)):
             for j in range(len(self.nodes)):
                 if self.adjacency_matrix[i][j] != NOT_CONNECTED:
-                    print(self.nodes[i], self.nodes[j], self.adjacency_matrix[i][j])
+                    print('%s-%s %s' % (self.nodes[i], self.nodes[j], self.adjacency_matrix[i][j]))
 
 def read_graph(graph_file):
     """Read graph from file.
@@ -42,7 +45,6 @@ def read_graph(graph_file):
     data = None
     with open(graph_file) as file:
         data = file.read().splitlines()
-    print(data)
 
     graph = Graph()
     for row in data:
