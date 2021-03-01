@@ -92,7 +92,8 @@ class Graph:
                 num_edges -= 1
                 adjacency_list[current_node].remove(prev_node)
             euler_cycle.append(current_node)
-        return euler_cycle
+        # Return with labels
+        return [self.nodes[x] for x in euler_cycle]
 
     def print_graph(self):
         print('Directed: %s' % self.directed)
