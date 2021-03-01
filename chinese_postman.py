@@ -68,6 +68,32 @@ class Graph:
                             edges.append(Edge(second_node, first_node, self.adjacency_matrix[i][j]))
         return edges
 
+    def get_node_index(self, node):
+        return self.nodes.index(node)
+
+    def compute_euler_cycle(self, start):
+        """
+        """
+        # Use the index
+        start = self.get_node_index(start)
+        # Check if all nodes have even edges
+        adjacency_list = self.get_adjacency_list()
+        euler_cycle = [start]
+        current_node = start
+        prev_node = None
+        num_edges = sum([len(i) for i in adjacency_list])
+        while num_edges > 0:
+            prev_node = current_node
+            # go to the next node
+            current_node = adjacency_list[current_node].pop()
+            num_edges -= 1
+            # Must remove the edge from other node if it is not a directed graph
+            if not self.directed:
+                num_edges -= 1
+                adjacency_list[current_node].remove(prev_node)
+            euler_cycle.append(current_node)
+        return euler_cycle
+
     def print_graph(self):
         print('Directed: %s' % self.directed)
         print('Nodes: %s' % ','.join(self.nodes))
@@ -138,5 +164,8 @@ if __name__ == "__main__":
     print('Adjacency list, index based')
     for node in adjacency_list:
         print(node)
+    print('Euler cycle')
+    euler_cycle = graph.compute_euler_cycle(node_1)
+    print(euler_cycle)
 
     print('fin')
