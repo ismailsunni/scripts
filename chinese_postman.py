@@ -78,6 +78,9 @@ class Graph:
         start = self.get_node_index(start)
         # Check if all nodes have even edges
         adjacency_list = self.get_adjacency_list()
+        # Check if all nodes have even degree
+        if sum([len(i) % 2 for i in adjacency_list]) != 0:
+            return []
         euler_cycle = [start]
         current_node = start
         prev_node = None
