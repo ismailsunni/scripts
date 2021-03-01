@@ -1,6 +1,7 @@
 """
 Implementing chinese postman solver with pure Python.
 """
+from prettytable import PrettyTable
 
 NOT_CONNECTED = 999
 ZERO_WEIGHT = 0
@@ -31,7 +32,7 @@ class Graph:
             self.nodes.append(node1)
             # Add new column to the matrix
             self.adjacency_matrix.append([NOT_CONNECTED] * len(self.nodes))
-            for i in range(len(self.adjacency_matrix)):
+            for i in range(len(self.adjacency_matrix) - 1):
                 self.adjacency_matrix[i].append(NOT_CONNECTED)
             # Self edge is zero
             self.adjacency_matrix[-1][-1] = ZERO_WEIGHT
@@ -39,7 +40,7 @@ class Graph:
             self.nodes.append(node2)
             # Add new column to the matrix
             self.adjacency_matrix.append([NOT_CONNECTED] * len(self.nodes))
-            for i in range(len(self.adjacency_matrix)):
+            for i in range(len(self.adjacency_matrix) - 1):
                 self.adjacency_matrix[i].append(NOT_CONNECTED)
             # Self edge is zero
             self.adjacency_matrix[-1][-1] = ZERO_WEIGHT
@@ -70,6 +71,20 @@ class Graph:
 
     def get_node_index(self, node):
         return self.nodes.index(node)
+
+    def get_adjacency_matrix(self):
+        return self.adjacency_matrix
+
+    def compute_floyd_warshall(self):
+        """Return the shortest distance matrix
+        """
+        distance_matrix = self.get_adjacency_matrix()
+        for k in range(len(self.nodes)):
+            for i in range(len(self.nodes)):
+                for j in range(len(self.nodes)):
+                    distance_matrix[i][j] = min(distance_matrix[i][j], distance_matrix[i][k] + distance_matrix[k][j])
+        return distance_matrix
+
 
     def compute_euler_cycle(self, start):
         """
@@ -136,6 +151,17 @@ class Graph:
                     adjacency_list[i].append(j)
         return adjacency_list
 
+def pretty_distance_matrix(nodes, distance_matrix):
+    table = PrettyTable()
+    header = ['Node']
+    header.extend(nodes)
+    table.field_names = header
+    for i in range(len(nodes)):
+        row = [nodes[i]]
+        row.extend(distance_matrix[i])
+        table.add_row(row)
+    print(table)
+
 
 def read_graph(graph_file):
     """Read graph from file.
@@ -171,5 +197,9 @@ if __name__ == "__main__":
     print('Euler cycle')
     euler_cycle = graph.compute_euler_cycle(node_1)
     print(euler_cycle)
+    print("Adjacency matrix")
+    pretty_distance_matrix(graph.nodes, graph.adjacency_matrix)
+    print("Floyd-Warshall distance matrix")
+    pretty_distance_matrix(graph.nodes, graph.compute_floyd_warshall())
 
     print('fin')
