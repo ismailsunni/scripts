@@ -82,15 +82,29 @@ class Graph:
                 if self.adjacency_matrix[i][j] != NOT_CONNECTED:
                     print('%s-%s %s' % (self.nodes[i], self.nodes[j], self.adjacency_matrix[i][j]))
 
+    # FIXME: Broken
     def get_forward_nodes(self, node):
         node_index = self.nodes.index(node)
         print(node_index)
         forward_node_indexes = self.adjacency_matrix[node_index]
         forward_nodes = []
         for i, forward_node_index in enumerate(forward_node_indexes):
-            if forward_node_index != NOT_CONNECTED and forward_node_index != ZERO_WEIGHT:
+            if self.adjacency_matrix[node_index][forward_node_index] not in [NOT_CONNECTED, ZERO_WEIGHT]:
                 forward_nodes.append(self.nodes[i])
         return forward_nodes
+
+    def get_adjacency_list(self):
+        """Return adjacency list of the graph. Only stores the index.
+        """
+        adjacency_list = []
+        for i in range(len(self.nodes)):
+            adjacency_list.append([])
+            for j in range(len(self.nodes)):
+                if i == j:
+                    continue
+                if self.adjacency_matrix[i][j] not in [NOT_CONNECTED, ZERO_WEIGHT]:
+                    adjacency_list[i].append(j)
+        return adjacency_list
 
 
 def read_graph(graph_file):
@@ -114,10 +128,15 @@ if __name__ == "__main__":
     graph = read_graph(graph_file)
     graph.print_graph()
     node_1 = graph.nodes[0]
-    print(node_1)
-    neighbour_nodes_1 = graph.get_forward_nodes(node_1)
-    print(neighbour_nodes_1)
+    print('First node %s' % node_1)
+    # neighbour_nodes_1 = graph.get_forward_nodes(node_1)
+    # print(neighbour_nodes_1)
+    print('Edges in the graph')
     for e in graph.get_edges():
         print(e)
+    adjacency_list = graph.get_adjacency_list()
+    print('Adjacency list, index based')
+    for node in adjacency_list:
+        print(node)
 
     print('fin')
