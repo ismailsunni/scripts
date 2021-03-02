@@ -2,6 +2,7 @@
 Implementing chinese postman solver with pure Python.
 """
 from prettytable import PrettyTable
+from copy import deepcopy
 
 NOT_CONNECTED = 999
 ZERO_WEIGHT = 0
@@ -151,13 +152,86 @@ class Graph:
                     adjacency_list[i].append(j)
         return adjacency_list
 
-def pretty_distance_matrix(nodes, distance_matrix):
+def compute_hungarian(matrix):
+    """The number of row and column is same.
+    Reference: http://www.hungarianalgorithm.com/examplehungarianalgorithm.php
+    """
+    matrix = deepcopy(matrix)
+    mask_matrix = [[False] * len(matrix)] * len(matrix)
+    row_cover = [False] * len(matrix)
+    column_cover = [False] * len(matrix)
+    # Step 1: Substract row minima
+    for i in range(len(matrix)):
+        min_row = min(matrix[i])
+        for j in range(len(matrix)):
+            matrix[i][j] = matrix[i][j] - min_row
+    # Step 1: Substract column minima
+    for i in range(len(matrix)):
+        min_column = min(row[i] for row in matrix)
+        for j in range(len(matrix)):
+            matrix[j][i] = matrix[j][i] - min_column
+    # Step 2: Cover zero
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
+            if matrix[i][j] == 0 and row_cover[i] == False and column_cover[j] == False:
+                mask_matrix[i][j] = True
+                row_cover[i] = True
+                column_cover[i] = True
+    # reset
+    row_cover = [False] * len(matrix)
+    column_cover = [False] * len(matrix)
+
+    # Step 3
+    column_count = 0
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
+            if mask_matrix[i][j]:
+                column_cover[j] = True
+    if column_cover.count(True) >= len(matrix):
+        # finish
+        pairs = []
+        for i in range(len(matrix)):
+            for j in range(len(matrix)):
+                if mask_matrix[i][j]:
+                    pairs.append((i, j))
+        print('Pair are')
+        print(pairs)
+        total = 0
+        for pair in pairs:
+            total += matrix[pair[0]][pair[1]]
+        print('Total %s' % total)
+    else:
+        print('Not Implemented')
+        print('Column cover != column number -> %s != %s' % (column_cover.count(True), len(matrix)))
+        print(mask_matrix)
+
+def sample_hungarian():
+    matrix = [
+        [82, 83, 69, 92],
+        [77, 37, 49, 92],
+        [11, 69, 5, 86],
+        [8, 9, 98, 23]
+    ]
+    matrix = [
+        [40, 60, 15],
+        [25, 30, 45],
+        [55, 30, 25]
+    ]
+    header = ['J%s' % i for i in range(len(matrix))]
+    row_names = ['W%s' % i for i in range(len(matrix))]
+    pretty_distance_matrix(header, matrix, row_names, first_cell='')
+    matrix = compute_hungarian(matrix)
+    # pretty_distance_matrix(header, matrix, row_names, first_cell='')
+
+def pretty_distance_matrix(nodes, distance_matrix, row_names = None, first_cell = 'Node'):
     table = PrettyTable()
-    header = ['Node']
+    header = [first_cell]
     header.extend(nodes)
     table.field_names = header
+    if not row_names:
+        row_names = nodes
     for i in range(len(nodes)):
-        row = [nodes[i]]
+        row = [row_names[i]]
         row.extend(distance_matrix[i])
         table.add_row(row)
     print(table)
@@ -201,5 +275,6 @@ if __name__ == "__main__":
     pretty_distance_matrix(graph.nodes, graph.adjacency_matrix)
     print("Floyd-Warshall distance matrix")
     pretty_distance_matrix(graph.nodes, graph.compute_floyd_warshall())
-
+    print('Hungarian method')
+    sample_hungarian()
     print('fin')
