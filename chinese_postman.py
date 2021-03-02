@@ -203,7 +203,7 @@ def compute_hungarian(matrix):
     else:
         print('Not Implemented')
         print('Column cover != column number -> %s != %s' % (column_cover.count(True), len(matrix)))
-        print(mask_matrix)
+        print_matrix(mask_matrix)
 
 def sample_hungarian():
     matrix = [
@@ -219,19 +219,22 @@ def sample_hungarian():
     ]
     header = ['J%s' % i for i in range(len(matrix))]
     row_names = ['W%s' % i for i in range(len(matrix))]
-    pretty_distance_matrix(header, matrix, row_names, first_cell='')
+    print_matrix(matrix, header, row_names)
     matrix = compute_hungarian(matrix)
-    # pretty_distance_matrix(header, matrix, row_names, first_cell='')
 
-def pretty_distance_matrix(nodes, distance_matrix, row_names = None, first_cell = 'Node'):
+def print_matrix(distance_matrix, column_names = None,  row_names = None, first_cell = ''):
     table = PrettyTable()
-    header = [first_cell]
-    header.extend(nodes)
-    table.field_names = header
+    if column_names:
+        header = [first_cell]
+        header.extend(column_names)
+        table.field_names = header
     if not row_names:
-        row_names = nodes
-    for i in range(len(nodes)):
-        row = [row_names[i]]
+        row_names = column_names
+    for i in range(len(distance_matrix)):
+        if row_names:
+            row = [row_names[i]]
+        else:
+            row = []
         row.extend(distance_matrix[i])
         table.add_row(row)
     print(table)
@@ -272,9 +275,9 @@ if __name__ == "__main__":
     euler_cycle = graph.compute_euler_cycle(node_1)
     print(euler_cycle)
     print("Adjacency matrix")
-    pretty_distance_matrix(graph.nodes, graph.adjacency_matrix)
+    print_matrix(graph.adjacency_matrix, graph.nodes)
     print("Floyd-Warshall distance matrix")
-    pretty_distance_matrix(graph.nodes, graph.compute_floyd_warshall())
+    print_matrix(graph.compute_floyd_warshall(), graph.nodes)
     print('Hungarian method')
     sample_hungarian()
     print('fin')
