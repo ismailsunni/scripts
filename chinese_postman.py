@@ -152,12 +152,15 @@ class Graph:
                     adjacency_list[i].append(j)
         return adjacency_list
 
-def compute_hungarian(matrix):
+def compute_hungarian(original_matrix):
     """The number of row and column is same.
     Reference: http://www.hungarianalgorithm.com/examplehungarianalgorithm.php
     """
-    matrix = deepcopy(matrix)
-    mask_matrix = [[False] * len(matrix)] * len(matrix)
+    matrix = deepcopy(original_matrix)
+    mask_matrix = deepcopy(matrix)
+    for i in range(len(mask_matrix)):
+        for j in range(len(mask_matrix)):
+            mask_matrix[i][j] = False
     row_cover = [False] * len(matrix)
     column_cover = [False] * len(matrix)
     # Step 1: Substract row minima
@@ -165,18 +168,22 @@ def compute_hungarian(matrix):
         min_row = min(matrix[i])
         for j in range(len(matrix)):
             matrix[i][j] = matrix[i][j] - min_row
+    print('Step 1: substract row minima')
+    print_matrix(matrix)
     # Step 1: Substract column minima
     for i in range(len(matrix)):
         min_column = min(row[i] for row in matrix)
         for j in range(len(matrix)):
             matrix[j][i] = matrix[j][i] - min_column
+    print('Step 1: substract column minima')
+    print_matrix(matrix)
     # Step 2: Cover zero
     for i in range(len(matrix)):
         for j in range(len(matrix)):
             if matrix[i][j] == 0 and row_cover[i] == False and column_cover[j] == False:
                 mask_matrix[i][j] = True
                 row_cover[i] = True
-                column_cover[i] = True
+                column_cover[j] = True
     # reset
     row_cover = [False] * len(matrix)
     column_cover = [False] * len(matrix)
@@ -194,11 +201,11 @@ def compute_hungarian(matrix):
             for j in range(len(matrix)):
                 if mask_matrix[i][j]:
                     pairs.append((i, j))
-        print('Pair are')
-        print(pairs)
         total = 0
+        print('Pair result')
         for pair in pairs:
-            total += matrix[pair[0]][pair[1]]
+            print(pair)
+            total += original_matrix[pair[0]][pair[1]]
         print('Total %s' % total)
     else:
         print('Not Implemented')
