@@ -152,65 +152,117 @@ class Graph:
                     adjacency_list[i].append(j)
         return adjacency_list
 
-def compute_hungarian(original_matrix):
-    """The number of row and column is same.
-    Reference: http://www.hungarianalgorithm.com/examplehungarianalgorithm.php
-    """
-    matrix = deepcopy(original_matrix)
-    mask_matrix = deepcopy(matrix)
-    for i in range(len(mask_matrix)):
-        for j in range(len(mask_matrix)):
-            mask_matrix[i][j] = False
-    row_cover = [False] * len(matrix)
-    column_cover = [False] * len(matrix)
-    # Step 1: Substract row minima
-    for i in range(len(matrix)):
-        min_row = min(matrix[i])
-        for j in range(len(matrix)):
-            matrix[i][j] = matrix[i][j] - min_row
-    print('Step 1: substract row minima')
-    print_matrix(matrix)
-    # Step 1: Substract column minima
-    for i in range(len(matrix)):
-        min_column = min(row[i] for row in matrix)
-        for j in range(len(matrix)):
-            matrix[j][i] = matrix[j][i] - min_column
-    print('Step 1: substract column minima')
-    print_matrix(matrix)
-    # Step 2: Cover zero
-    for i in range(len(matrix)):
-        for j in range(len(matrix)):
-            if matrix[i][j] == 0 and row_cover[i] == False and column_cover[j] == False:
-                mask_matrix[i][j] = True
-                row_cover[i] = True
-                column_cover[j] = True
-    # reset
-    row_cover = [False] * len(matrix)
-    column_cover = [False] * len(matrix)
 
-    # Step 3
-    column_count = 0
-    for i in range(len(matrix)):
-        for j in range(len(matrix)):
-            if mask_matrix[i][j]:
-                column_cover[j] = True
-    if column_cover.count(True) >= len(matrix):
-        # finish
-        pairs = []
-        for i in range(len(matrix)):
-            for j in range(len(matrix)):
-                if mask_matrix[i][j]:
-                    pairs.append((i, j))
-        total = 0
-        print('Pair result')
-        for pair in pairs:
-            print(pair)
-            total += original_matrix[pair[0]][pair[1]]
-        print('Total %s' % total)
-    else:
-        print('Not Implemented')
-        print('Column cover != column number -> %s != %s' % (column_cover.count(True), len(matrix)))
-        print_matrix(mask_matrix)
+class HungarianSolver:
+    """Class for running Hungarian algorithm.
+    References:
+    1. https://brc2.com/the-algorithm-workshop/
+    2. https://towardsdatascience.com/maximizing-group-happiness-in-white-elephants-using-the-hungarian-optimal-assignment-algorithm-17be4f112746
+    3. http://www.hungarianalgorithm.com/examplehungarianalgorithm.php
+    """
+    def __init__(self, matrix):
+        # Store original matrix
+        self.original_matrix = matrix
+        # Deep copy of the matrix so that the class does not alter the original
+        self.matrix = deepcopy(self.original_matrix)
+        # Mask matrix to cover the 0
+        self.mask_matrix = deepcopy(self.original_matrix)
+        # Set all cell to False
+        for i in range(len(self.mask_matrix)):
+            for j in range(len(self.mask_matrix)):
+                self.mask_matrix[i][j] = False
+        self.row_cover = [False] * len(self.matrix)
+        self.column_cover = [False] * len(self.matrix)
+        self.current_step = 1
+        self.finished = False
+
+    def solve(self):
+        self.finished = False
+        self.current_step = 1
+        while(not self.finished):
+            print('Step %s' % self.current_step)
+            print_matrix(self.matrix)
+            if self.current_step == 1:
+                self.step_1()
+            elif self.current_step == 2:
+                self.step_2()
+            elif self.current_step == 3:
+                self.step_3()
+            elif self.current_step == 4:
+                self.step_4()
+            elif self.current_step == 5:
+                self.step_5()
+            elif self.current_step == 6:
+                self.step_6()
+            elif self.current_step == 7:
+                self.step_7()
+        print('HungarianSolver finished.')
+
+    def step_1(self):
+        # Step 1: Substract row minima
+        for i in range(len(self.matrix)):
+            min_row = min(self.matrix[i])
+            for j in range(len(self.matrix)):
+                self.matrix[i][j] = self.matrix[i][j] - min_row
+        print('Step 1: substract row minima')
+        print_matrix(self.matrix)
+        # Step 1: Substract column minima
+        for i in range(len(self.matrix)):
+            min_column = min(row[i] for row in self.matrix)
+            for j in range(len(self.matrix)):
+                self.matrix[j][i] = self.matrix[j][i] - min_column
+        print('Step 1: substract column minima')
+        print_matrix(self.matrix)
+        # Step 2: Cover zero
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix)):
+                if self.matrix[i][j] == 0 and self.row_cover[i] == False and self.column_cover[j] == False:
+                    self.mask_matrix[i][j] = True
+                    self.row_cover[i] = True
+                    self.column_cover[j] = True
+
+        self.current_step = 3
+
+    def step_2(self):
+        pass
+
+    def step_3(self):
+        # Step 3
+        column_count = 0
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix)):
+                if self.mask_matrix[i][j]:
+                    self.column_cover[j] = True
+        if self.column_cover.count(True) >= len(self.matrix):
+            # finish
+            pairs = []
+            for i in range(len(self.matrix)):
+                for j in range(len(self.matrix)):
+                    if self.mask_matrix[i][j]:
+                        pairs.append((i, j))
+            total = 0
+            print('Pair result')
+            for pair in pairs:
+                print(pair)
+                total += self.original_matrix[pair[0]][pair[1]]
+            print('Total %s' % total)
+            self.finished = True
+        else:
+            print('Not Implemented')
+            print('Column cover != column number -> %s != %s' % (column_cover.count(True), len(matrix)))
+            print_matrix(mask_matrix)
+
+    def step_4(self):
+        pass
+
+    def step_5(self):
+        pass
+
+    def step_6(self):
+        pass
+
+    def step_7(self):
+        pass
 
 def sample_hungarian():
     matrix = [
@@ -227,7 +279,9 @@ def sample_hungarian():
     header = ['J%s' % i for i in range(len(matrix))]
     row_names = ['W%s' % i for i in range(len(matrix))]
     print_matrix(matrix, header, row_names)
-    matrix = compute_hungarian(matrix)
+    # matrix = compute_hungarian(matrix)
+    hs = HungarianSolver(matrix)
+    hs.solve()
 
 def print_matrix(distance_matrix, column_names = None,  row_names = None, first_cell = ''):
     table = PrettyTable()
