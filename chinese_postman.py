@@ -171,8 +171,8 @@ class HungarianSolver:
         for i in range(len(self.mask_matrix)):
             for j in range(len(self.mask_matrix)):
                 self.mask_matrix[i][j] = False
-        self.row_cover = [False] * len(self.matrix)
-        self.column_cover = [False] * len(self.matrix)
+        self.row_covered = [False] * len(self.matrix)
+        self.column_covered = [False] * len(self.matrix)
         self.current_step = 1
         self.finished = False
 
@@ -216,10 +216,15 @@ class HungarianSolver:
         # Step 2: Cover zero
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix)):
-                if self.matrix[i][j] == 0 and self.row_cover[i] == False and self.column_cover[j] == False:
+                if self.matrix[i][j] == 0 and self.row_covered[i] == False and self.column_covered[j] == False:
                     self.mask_matrix[i][j] = True
-                    self.row_cover[i] = True
-                    self.column_cover[j] = True
+                    self.row_covered[i] = True
+                    self.column_covered[j] = True
+
+        # reset cover ?
+        for i in range(len(self.matrix)):
+            self.row_covered[i] = False
+            self.row_covered[j] = False
 
         self.current_step = 3
 
@@ -232,28 +237,50 @@ class HungarianSolver:
         for i in range(len(self.matrix)):
             for j in range(len(self.matrix)):
                 if self.mask_matrix[i][j]:
-                    self.column_cover[j] = True
-        if self.column_cover.count(True) >= len(self.matrix):
-            # finish
-            pairs = []
-            for i in range(len(self.matrix)):
-                for j in range(len(self.matrix)):
-                    if self.mask_matrix[i][j]:
-                        pairs.append((i, j))
-            total = 0
-            print('Pair result')
-            for pair in pairs:
-                print(pair)
-                total += self.original_matrix[pair[0]][pair[1]]
-            print('Total %s' % total)
-            self.finished = True
+                    self.column_covered[j] = True
+        if self.column_covered.count(True) >= len(self.matrix):
+            # Finihed
+            self.current_step = 7
         else:
+            # Go to step 4
+            self.current_step = 4
             print('Not Implemented')
-            print('Column cover != column number -> %s != %s' % (column_cover.count(True), len(matrix)))
-            print_matrix(mask_matrix)
+            print('Column cover != column number -> %s != %s' % (self.column_covered.count(True), len(self.matrix)))
+            print_matrix(self.mask_matrix)
+
+    def find_uncovered_zero(self):
+        done = False
+        row = 0
+        column = 0
+        zero_row = -1
+        zero_column = -1
+        while column < len(self.matrix) and not done:
+            column = 0
+            while column < len(self.matrix) and not done:
+                if self.matrix[row][column] == 0 and self.row_covered[row] == False and self.column_covered[column] == False:
+                    zero_column = column
+                    zero_row = row
+                    done = True
+                column += 1
+            row += 1
+
+        if done:
+            return zero_row, zero_column
+        else:
+            # Not found
+            return -1, -1
 
     def step_4(self):
-        pass
+        row = -1
+        column = -1
+        done = False
+        while not done:
+            row, column = self.find_uncovered_zero()
+            if row == -1:
+                done = True
+                self.current_step = 6
+            else:
+                pass
 
     def step_5(self):
         pass
@@ -262,7 +289,19 @@ class HungarianSolver:
         pass
 
     def step_7(self):
-        pass
+        """Print the result"""
+        pairs = []
+        for i in range(len(self.matrix)):
+            for j in range(len(self.matrix)):
+                if self.mask_matrix[i][j]:
+                    pairs.append((i, j))
+        total = 0
+        print('Pair result')
+        for pair in pairs:
+            print(pair)
+            total += self.original_matrix[pair[0]][pair[1]]
+        print('Total %s' % total)
+        self.finished = True
 
 def sample_hungarian():
     matrix = [
@@ -275,6 +314,11 @@ def sample_hungarian():
         [40, 60, 15],
         [25, 30, 45],
         [55, 30, 25]
+    ]
+    matrix = [
+        [1, 2, 3],
+        [2, 4, 6],
+        [3, 6, 9]
     ]
     header = ['J%s' % i for i in range(len(matrix))]
     row_names = ['W%s' % i for i in range(len(matrix))]
