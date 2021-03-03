@@ -160,6 +160,10 @@ class HungarianSolver:
     2. https://towardsdatascience.com/maximizing-group-happiness-in-white-elephants-using-the-hungarian-optimal-assignment-algorithm-17be4f112746
     3. http://www.hungarianalgorithm.com/examplehungarianalgorithm.php
     """
+    NORMAL = 0
+    STARRED = 1
+    PRIMED = 2
+
     def __init__(self, matrix):
         # Store original matrix
         self.original_matrix = matrix
@@ -167,12 +171,13 @@ class HungarianSolver:
         self.matrix = deepcopy(self.original_matrix)
         # Mask matrix to cover the 0
         self.mask_matrix = deepcopy(self.original_matrix)
-        # Set all cell to False
-        for i in range(len(self.mask_matrix)):
-            for j in range(len(self.mask_matrix)):
-                self.mask_matrix[i][j] = False
-        self.row_covered = [False] * len(self.matrix)
-        self.column_covered = [False] * len(self.matrix)
+        length = len(self.mask_matrix)
+        # Set all cell to Normal
+        for i in range(length):
+            for j in range(length):
+                self.mask_matrix[i][j] = self.NORMAL
+        self.row_covered = [False] * len(length)
+        self.column_covered = [False] * len(length)
         self.current_step = 1
         self.finished = False
 
@@ -198,48 +203,56 @@ class HungarianSolver:
                 self.step_7()
         print('HungarianSolver finished.')
 
-    def step_1(self):
-        # Step 1: Substract row minima
-        for i in range(len(self.matrix)):
-            min_row = min(self.matrix[i])
-            for j in range(len(self.matrix)):
-                self.matrix[i][j] = self.matrix[i][j] - min_row
-        print('Step 1: substract row minima')
-        print_matrix(self.matrix)
-        # Step 1: Substract column minima
-        for i in range(len(self.matrix)):
-            min_column = min(row[i] for row in self.matrix)
-            for j in range(len(self.matrix)):
-                self.matrix[j][i] = self.matrix[j][i] - min_column
-        print('Step 1: substract column minima')
-        print_matrix(self.matrix)
-        # Step 2: Cover zero
-        for i in range(len(self.matrix)):
-            for j in range(len(self.matrix)):
-                if self.matrix[i][j] == 0 and self.row_covered[i] == False and self.column_covered[j] == False:
-                    self.mask_matrix[i][j] = True
-                    self.row_covered[i] = True
-                    self.column_covered[j] = True
-
-        # reset cover ?
+    def clear_covered(self):
         for i in range(len(self.matrix)):
             self.row_covered[i] = False
-            self.row_covered[j] = False
+            self.column_covered[i] = False
+
+    def step_1(self):
+        """
+        Step 1:  For each row of the matrix, find the smallest element and subtract it from every element in
+        its row.  Go to Step 2.
+        """
+        for r in range(len(self.matrix)):
+            min_row = min(self.matrix[r])
+            for c in range(len(self.matrix)):
+                self.matrix[r][c] = self.matrix[r][c] - min_row
+        print('Step 1: substract row minima')
+        print_matrix(self.matrix)
+
+        self.current_step = 2
+
+    def step_2(self):
+        """
+        Step 2:  Find a zero (Z) in the resulting matrix.  If there is no starred zero in its row or column,
+        star Z. Repeat for each element in the matrix. Go to Step 3.
+        """
+        length = len(self.matrix)
+        for r in range(length):
+            for c in range(length):
+                if self.matrix[r][c] == 0 and not self.row_covered[r] and not self.column_covered[c]:
+                    self.mask_matrix[r][c] = True
+                    self.row_covered[r] = True
+                    self.column_covered[c] = True
+
+        self.clear_covered()
 
         self.current_step = 3
 
-    def step_2(self):
-        pass
-
     def step_3(self):
-        # Step 3
+        """
+        Step 3:  Cover each column containing a starred zero.  If K columns are covered, the starred zeros describe
+        a complete set of unique assignments.  In this case, Go to DONE, otherwise, Go to Step 4.
+        """
         column_count = 0
-        for i in range(len(self.matrix)):
-            for j in range(len(self.matrix)):
+        length = len(self.matrix)
+        for i in range(length):
+            for j in range(length):
                 if self.mask_matrix[i][j]:
                     self.column_covered[j] = True
-        if self.column_covered.count(True) >= len(self.matrix):
-            # Finihed
+                    column_count += 1
+        if column_count >= length:
+            # Finished
             self.current_step = 7
         else:
             # Go to step 4
