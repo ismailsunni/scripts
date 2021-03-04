@@ -1,8 +1,8 @@
 """
 Implementing chinese postman solver with pure Python.
 """
-from prettytable import PrettyTable
 from copy import deepcopy
+from prettytable import PrettyTable
 
 NOT_CONNECTED = 999
 ZERO_WEIGHT = 0
@@ -18,7 +18,7 @@ class Edge:
         self.node2 = node2
         self.weight = weight
 
-    def __str__ (self):
+    def __str__(self):
         return "%s-%s %s" % (self.node1, self.node2, self.weight)
 
 class Graph:
@@ -45,9 +45,11 @@ class Graph:
                 self.adjacency_matrix[i].append(NOT_CONNECTED)
             # Self edge is zero
             self.adjacency_matrix[-1][-1] = ZERO_WEIGHT
-        self.adjacency_matrix[self.nodes.index(node1)][self.nodes.index(node2)] = weight
+        node1_index = self.nodes.index(node1)
+        node2_index = self.nodes.index(node2)
+        self.adjacency_matrix[node1_index][node2_index] = weight
         if not self.directed:
-            self.adjacency_matrix[self.nodes.index(node2)][self.nodes.index(node1)] = weight
+            self.adjacency_matrix[node2_index][node1_index] = weight
 
     def get_edges(self):
         edges = []
@@ -59,15 +61,24 @@ class Graph:
             for j in range(max_iteration):
                 if self.adjacency_matrix[i][j] != NOT_CONNECTED:
                     if self.directed:
-                        edges.append(Edge(self.nodes[i], self.nodes[j], self.adjacency_matrix[i][j]))
+                        edges.append(Edge(
+                            self.nodes[i],
+                            self.nodes[j],
+                            self.adjacency_matrix[i][j]))
                     else:
                         # sort the nodes if it's not directed graph
                         first_node = self.nodes[i]
                         second_node = self.nodes[j]
                         if first_node < second_node:
-                            edges.append(Edge(first_node, second_node, self.adjacency_matrix[i][j]))
+                            edges.append(Edge(
+                                first_node,
+                                second_node,
+                                self.adjacency_matrix[i][j]))
                         else:
-                            edges.append(Edge(second_node, first_node, self.adjacency_matrix[i][j]))
+                            edges.append(Edge(
+                                second_node,
+                                first_node,
+                                self.adjacency_matrix[i][j]))
         return edges
 
     def get_node_index(self, node):
@@ -83,7 +94,9 @@ class Graph:
         for k in range(len(self.nodes)):
             for i in range(len(self.nodes)):
                 for j in range(len(self.nodes)):
-                    distance_matrix[i][j] = min(distance_matrix[i][j], distance_matrix[i][k] + distance_matrix[k][j])
+                    distance_matrix[i][j] = min(
+                        distance_matrix[i][j],
+                        distance_matrix[i][k] + distance_matrix[k][j])
         return distance_matrix
 
 
@@ -106,7 +119,8 @@ class Graph:
             # go to the next node
             current_node = adjacency_list[current_node].pop()
             num_edges -= 1
-            # Must remove the edge from other node if it is not a directed graph
+            # Must remove the edge from other node if it is not a
+            # directed graph
             if not self.directed:
                 num_edges -= 1
                 adjacency_list[current_node].remove(prev_node)
@@ -126,16 +140,20 @@ class Graph:
                 max_iteration = i
             for j in range(max_iteration):
                 if self.adjacency_matrix[i][j] != NOT_CONNECTED:
-                    print('%s-%s %s' % (self.nodes[i], self.nodes[j], self.adjacency_matrix[i][j]))
+                    print('%s-%s %s' % (
+                        self.nodes[i],
+                        self.nodes[j],
+                        self.adjacency_matrix[i][j]))
 
-    # FIXME: Broken
+    # FIXME: this method is broken
     def get_forward_nodes(self, node):
         node_index = self.nodes.index(node)
         print(node_index)
         forward_node_indexes = self.adjacency_matrix[node_index]
         forward_nodes = []
         for i, forward_node_index in enumerate(forward_node_indexes):
-            if self.adjacency_matrix[node_index][forward_node_index] not in [NOT_CONNECTED, ZERO_WEIGHT]:
+            if self.adjacency_matrix[node_index][forward_node_index] not in [
+                    NOT_CONNECTED, ZERO_WEIGHT]:
                 forward_nodes.append(self.nodes[i])
         return forward_nodes
 
@@ -148,7 +166,8 @@ class Graph:
             for j in range(len(self.nodes)):
                 if i == j:
                     continue
-                if self.adjacency_matrix[i][j] not in [NOT_CONNECTED, ZERO_WEIGHT]:
+                if self.adjacency_matrix[i][j] not in [
+                        NOT_CONNECTED, ZERO_WEIGHT]:
                     adjacency_list[i].append(j)
         return adjacency_list
 
@@ -176,15 +195,15 @@ class HungarianSolver:
         for i in range(length):
             for j in range(length):
                 self.mask_matrix[i][j] = self.NORMAL
-        self.row_covered = [False] * len(length)
-        self.column_covered = [False] * len(length)
+        self.row_covered = [False] * length
+        self.column_covered = [False] * length
         self.current_step = 1
         self.finished = False
 
     def solve(self):
         self.finished = False
         self.current_step = 1
-        while(not self.finished):
+        while not self.finished:
             print('Step %s' % self.current_step)
             print_matrix(self.matrix)
             if self.current_step == 1:
@@ -210,8 +229,8 @@ class HungarianSolver:
 
     def step_1(self):
         """
-        Step 1:  For each row of the matrix, find the smallest element and subtract it from every element in
-        its row.  Go to Step 2.
+        Step 1:  For each row of the matrix, find the smallest element and
+        subtract it from every element in its row.  Go to Step 2.
         """
         for r in range(len(self.matrix)):
             min_row = min(self.matrix[r])
@@ -224,13 +243,16 @@ class HungarianSolver:
 
     def step_2(self):
         """
-        Step 2:  Find a zero (Z) in the resulting matrix.  If there is no starred zero in its row or column,
-        star Z. Repeat for each element in the matrix. Go to Step 3.
+        Step 2:  Find a zero (Z) in the resulting matrix.  If there is no
+        starred zero in its row or column, star Z. Repeat for each element
+        in the matrix. Go to Step 3.
         """
         length = len(self.matrix)
         for r in range(length):
             for c in range(length):
-                if self.matrix[r][c] == 0 and not self.row_covered[r] and not self.column_covered[c]:
+                if self.matrix[r][c] == 0 and \
+                    not self.row_covered[r] and \
+                        not self.column_covered[c]:
                     self.mask_matrix[r][c] = True
                     self.row_covered[r] = True
                     self.column_covered[c] = True
@@ -241,8 +263,9 @@ class HungarianSolver:
 
     def step_3(self):
         """
-        Step 3:  Cover each column containing a starred zero.  If K columns are covered, the starred zeros describe
-        a complete set of unique assignments.  In this case, Go to DONE, otherwise, Go to Step 4.
+        Step 3:  Cover each column containing a starred zero.  If K columns
+        are covered, the starred zeros describe a complete set of unique
+        assignments.  In this case, Go to DONE, otherwise, Go to Step 4.
         """
         column_count = 0
         length = len(self.matrix)
@@ -258,37 +281,48 @@ class HungarianSolver:
             # Go to step 4
             self.current_step = 4
             print('Not Implemented')
-            print('Column cover != column number -> %s != %s' % (self.column_covered.count(True), len(self.matrix)))
+            print('Column cover != column number -> %s != %s' % (
+                self.column_covered.count(True), len(self.matrix)))
             print_matrix(self.mask_matrix)
 
-    def find_uncovered_zero(self):
+    def find_uncovered_zero(self, row, column):
+        """Find uncovered zero."""
+        uncovered_zero_row = -1
+        uncovered_zero_column = -1
         done = False
-        row = 0
-        column = 0
-        zero_row = -1
-        zero_column = -1
-        while column < len(self.matrix) and not done:
-            column = 0
-            while column < len(self.matrix) and not done:
-                if self.matrix[row][column] == 0 and self.row_covered[row] == False and self.column_covered[column] == False:
-                    zero_column = column
-                    zero_row = row
-                    done = True
-                column += 1
-            row += 1
+        r = row
 
-        if done:
-            return zero_row, zero_column
-        else:
-            # Not found
-            return -1, -1
+        while not done:
+            c = column
+            while True:
+                if self.matrix[r][c] == 0 and \
+                    not self.row_covered[r] and \
+                        not self.column_covered[c]:
+                    uncovered_zero_row = r
+                    uncovered_zero_column = c
+                    done = True
+                c += 1
+                if c >= len(self.matrix) or done:
+                    break
+            r += 1
+            if r >= len(self.matrix):
+                done = True
+
+        return uncovered_zero_row, uncovered_zero_column
 
     def step_4(self):
+        """
+        Step 4:  Find a noncovered zero and prime it.  If there is no starred
+        zero in the row containing this primed zero, Go to Step 5.  Otherwise,
+        cover this row and uncover the column containing the starred zero.
+        Continue in this manner until there are no uncovered zeros left.
+        Save the smallest uncovered value and Go to Step 6.
+        """
         row = -1
         column = -1
         done = False
         while not done:
-            row, column = self.find_uncovered_zero()
+            row, column = self.find_uncovered_zero(row, column)
             if row == -1:
                 done = True
                 self.current_step = 6
@@ -296,6 +330,8 @@ class HungarianSolver:
                 pass
 
     def step_5(self):
+        """
+        """
         pass
 
     def step_6(self):
@@ -340,7 +376,8 @@ def sample_hungarian():
     hs = HungarianSolver(matrix)
     hs.solve()
 
-def print_matrix(distance_matrix, column_names = None,  row_names = None, first_cell = ''):
+def print_matrix(
+        distance_matrix, column_names=None, row_names=None, first_cell=''):
     table = PrettyTable()
     if column_names:
         header = [first_cell]
@@ -379,19 +416,6 @@ if __name__ == "__main__":
     graph = read_graph(graph_file)
     graph.print_graph()
     node_1 = graph.nodes[0]
-    print('First node %s' % node_1)
-    # neighbour_nodes_1 = graph.get_forward_nodes(node_1)
-    # print(neighbour_nodes_1)
-    print('Edges in the graph')
-    for e in graph.get_edges():
-        print(e)
-    adjacency_list = graph.get_adjacency_list()
-    print('Adjacency list, index based')
-    for node in adjacency_list:
-        print(node)
-    print('Euler cycle')
-    euler_cycle = graph.compute_euler_cycle(node_1)
-    print(euler_cycle)
     print("Adjacency matrix")
     print_matrix(graph.adjacency_matrix, graph.nodes)
     print("Floyd-Warshall distance matrix")
