@@ -1,6 +1,7 @@
 """
 Implementing chinese postman solver with pure Python.
 """
+import sys
 from copy import deepcopy
 from prettytable import PrettyTable
 
@@ -199,6 +200,15 @@ class HungarianSolver:
         self.column_covered = [False] * length
         self.current_step = 1
         self.finished = False
+        # To store Z0 (uncovered zero on step 4)
+        self.Z0_column = 0
+        self.Z0_row = 0
+        # Initialise path with size 2n x 2n, all 0
+        self.path = []
+        for i in range(2 * length):
+            self.path.append([])
+            for j in range(2 * length):
+                self.path[i].append(0)
 
     def solve(self):
         self.finished = False
@@ -310,6 +320,14 @@ class HungarianSolver:
 
         return uncovered_zero_row, uncovered_zero_column
 
+    def find_star_in_row(self, row):
+        """Find a starred element in the row. Return -1 if not found.
+        """
+        for c in range(len(self.matrix)):
+            if self.mask_matrix[row][c] == self.STARRED:
+                return c
+        return -1
+
     def step_4(self):
         """
         Step 4:  Find a noncovered zero and prime it.  If there is no starred
@@ -327,15 +345,130 @@ class HungarianSolver:
                 done = True
                 self.current_step = 6
             else:
-                pass
+                self.mask_matrix[row][column] = self.PRIMED
+                starred_column = self.find_star_in_row(row)
+                if starred_column >= 0:
+                    # Otherwise, cover this row and uncover the column
+                    # containing the starred zero.
+                    column = starred_column
+                    self.row_covered[row] = True
+                    self.column_covered[column] = False
+                else:
+                    # If there is no starred zero in the row containing this
+                    # primed zero, Go to Step 5
+                    done = True
+                    self.Z0_column = column
+                    self.Z0_row = row
+                    self.current_step = 5
+
+    def find_star_in_column(self, column):
+        """Find a starred element in the column. Return -1 if not found.
+        """
+        for r in range(len(self.matrix)):
+            if self.mask_matrix[r][column] == self.STARRED:
+                return r
+        return -1
+
+    def find_prime_in_row(self, row):
+        """Find a primed element in the row. Return -1 if not found.
+        """
+        for c in range(len(self.matrix)):
+            if self.mask_matrix[row][c] == self.PRIMED:
+                return c
+        return -1
+
+    def augment_path(self, path_count):
+        for p in range(path_count):
+            p_row = self.path[p][0]
+            p_column = self.path[p][1]
+            if self.mask_matrix[p_row][p_column] == self.PRIMED:
+                self.mask_matrix[p_row][p_column] = self.NORMAL
+            else:
+                self.mask_matrix[p_row][p_column] = self.PRIMED
+
+    def erase_primes(self):
+        for r in range(len(self.mask_matrix)):
+            for c in range(len(self.mask_matrix)):
+                if self.mask_matrix[r][c] == self.PRIMED:
+                    self.mask_matrix[r][c] = self.NORMAL
 
     def step_5(self):
         """
+        Construct a series of alternating primed and starred zeros as follows.
+        Let Z0 represent the uncovered primed zero found in Step 4.
+        Let Z1 denote the starred zero in the column of Z0 (if any).
+        Let Z2 denote the primed zero in the row of Z1 (there will always be
+        one).
+        Continue until the series terminates at a primed zero that has no
+        starred zero in its column. Unstar each starred zero of the series,
+        star each primed zero of the series, erase all primes and uncover
+        every line in the matrix. Return to Step 3.
         """
-        pass
+        done = False
+        row = -1
+        column = -1
+
+        path_count = 0
+        # Initialize path with uncovered primed zero (Z0)
+        self.path[path_count][0] = self.Z0_row
+        self.path[path_count][1] = self.Z0_column
+
+        while not done:
+            row = self.find_star_in_column(self.path[path_count][1])
+            if row >= 0:
+                # Found
+                path_count += 1
+                self.path[path_count][0] = row
+                self.path[path_count][1] = self.path[path_count - 1][1]
+            else:
+                # No starred zero found in the column
+                done = True
+            if not done:
+                column = self.find_prime_in_row(self.path[path_count][0])
+                path_count += 1
+                self.path[path_count][0] = self.path[path_count - 1][0]
+                self.path[path_count][1] = column
+
+        # Augment path
+        self.augment_path(path_count)
+        # Clear cover
+        self.clear_covered()
+        # Erase primes
+        self.erase_primes()
+
+        self.current_step = 3
+
+    def find_smallest(self):
+        smallest = sys.maxsize
+        for r in range(len(self.matrix)):
+            for c in range(len(self.matrix)):
+                if not self.row_covered[r] and not self.column_covered[c]:
+                    if self.matrix[r][c] < smallest:
+                        smallest = self.matrix[r][c]
+        return smallest
 
     def step_6(self):
-        pass
+        """
+        Step 6:  Add the value found in Step 4 to every element of each
+        covered row, and subtract it from every element of each uncovered
+        column.
+
+        The value in step 4 is replaced by the smallest uncovered value.
+
+        Return to Step 4 without altering any stars, primes, or covered lines.
+        """
+        # Find smallest uncovered value
+        smallest = self.find_smallest()
+        for r in range(len(self.matrix)):
+            for c in range(len(self.matrix)):
+                if self.row_covered[r]:
+                    # Row is covered, add smallest to it
+                    self.matrix[r][c] += smallest
+                if self.column_covered[c]:
+                    # Column is covered, substract smallest from it
+                    self.matrix[r][c] -= smallest
+        # Back to step 4
+        self.current_step = 4
 
     def step_7(self):
         """Print the result"""
