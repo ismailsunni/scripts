@@ -215,7 +215,6 @@ class HungarianSolver:
         self.current_step = 1
         while not self.finished:
             print('Step %s' % self.current_step)
-            print_matrix(self.matrix)
             if self.current_step == 1:
                 self.step_1()
             elif self.current_step == 2:
@@ -230,6 +229,10 @@ class HungarianSolver:
                 self.step_6()
             elif self.current_step == 7:
                 self.step_7()
+            print('Row covered', self.row_covered)
+            print('Column covered', self.column_covered)
+            print_matrix(self.matrix)
+            print_matrix(self.mask_matrix)
         print('HungarianSolver finished.')
 
     def clear_covered(self):
@@ -245,9 +248,7 @@ class HungarianSolver:
         for r in range(len(self.matrix)):
             min_row = min(self.matrix[r])
             for c in range(len(self.matrix)):
-                self.matrix[r][c] = self.matrix[r][c] - min_row
-        print('Step 1: substract row minima')
-        print_matrix(self.matrix)
+                self.matrix[r][c] -= min_row
 
         self.current_step = 2
 
@@ -263,10 +264,13 @@ class HungarianSolver:
                 if self.matrix[r][c] == 0 and \
                     not self.row_covered[r] and \
                         not self.column_covered[c]:
-                    self.mask_matrix[r][c] = True
+                    self.mask_matrix[r][c] = self.STARRED
+                    # Covered the row and the column if the 0 found is the
+                    # only (starred) zero on the row or column
                     self.row_covered[r] = True
                     self.column_covered[c] = True
 
+        # Clear the covered because we need clear state of the covered
         self.clear_covered()
 
         self.current_step = 3
@@ -279,18 +283,17 @@ class HungarianSolver:
         """
         column_count = 0
         length = len(self.matrix)
-        for i in range(length):
-            for j in range(length):
-                if self.mask_matrix[i][j]:
-                    self.column_covered[j] = True
+        for row in range(length):
+            for column in range(length):
+                if self.mask_matrix[row][column]:
+                    self.column_covered[column] = True
                     column_count += 1
         if column_count >= length:
-            # Finished
+            # All column is covered, then we have the solution.
             self.current_step = 7
         else:
             # Go to step 4
             self.current_step = 4
-            print('Not Implemented')
             print('Column cover != column number -> %s != %s' % (
                 self.column_covered.count(True), len(self.matrix)))
             print_matrix(self.mask_matrix)
@@ -467,6 +470,8 @@ class HungarianSolver:
                 if self.column_covered[c]:
                     # Column is covered, substract smallest from it
                     self.matrix[r][c] -= smallest
+                    if self.matrix[r][c] < 0:
+                        raise Exception('Impossible to be negative')
         # Back to step 4
         self.current_step = 4
 
@@ -492,10 +497,11 @@ def sample_hungarian():
         [11, 69, 5, 86],
         [8, 9, 98, 23]
     ]
+    # Example that after step 2 finished
     matrix = [
         [40, 60, 15],
         [25, 30, 45],
-        [55, 30, 25]
+        [55, 25, 30]
     ]
     matrix = [
         [1, 2, 3],
