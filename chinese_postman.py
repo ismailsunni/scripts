@@ -2,11 +2,13 @@
 Implementing chinese postman solver with pure Python.
 """
 import sys
+import time
 from copy import deepcopy
 from prettytable import PrettyTable
 
 NOT_CONNECTED = 999
 ZERO_WEIGHT = 0
+PAUSE_DURATION = 0.5
 
 
 class Node:
@@ -133,7 +135,6 @@ class Graph:
         print('Directed: %s' % self.directed)
         print('Nodes: %s' % ','.join(self.nodes))
         print('Adjacency matrix:')
-        edges = self.get_edges
         for i in range(len(self.nodes)):
             if self.directed:
                 max_iteration = len(self.nodes)
@@ -233,6 +234,7 @@ class HungarianSolver:
             print('Column covered', self.column_covered)
             print_matrix(self.matrix)
             print_matrix(self.mask_matrix)
+            time.sleep(PAUSE_DURATION)
         print('HungarianSolver finished.')
 
     def clear_covered(self):
@@ -285,40 +287,40 @@ class HungarianSolver:
         length = len(self.matrix)
         for row in range(length):
             for column in range(length):
-                if self.mask_matrix[row][column]:
+                if self.mask_matrix[row][column] == self.STARRED and \
+                    not self.column_covered[column]:
+                    # Cover each column containing a starred zero
                     self.column_covered[column] = True
                     column_count += 1
         if column_count >= length:
             # All column is covered, then we have the solution.
             self.current_step = 7
         else:
-            # Go to step 4
+            # Otherwise, go to step 4
             self.current_step = 4
-            print('Column cover != column number -> %s != %s' % (
-                self.column_covered.count(True), len(self.matrix)))
-            print_matrix(self.mask_matrix)
 
-    def find_uncovered_zero(self, row, column):
-        """Find uncovered zero."""
+    def find_uncovered_zero(self):
+        """Find the first uncovered zero."""
         uncovered_zero_row = -1
         uncovered_zero_column = -1
         done = False
-        r = row
+        row = 0
 
         while not done:
-            c = column
+            column = 0
             while True:
-                if self.matrix[r][c] == 0 and \
-                    not self.row_covered[r] and \
-                        not self.column_covered[c]:
-                    uncovered_zero_row = r
-                    uncovered_zero_column = c
+                if self.matrix[row][column] == 0 and \
+                    not self.row_covered[row] and \
+                        not self.column_covered[column]:
+                    uncovered_zero_row = row
+                    uncovered_zero_column = column
                     done = True
-                c += 1
-                if c >= len(self.matrix) or done:
+
+                column += 1
+                if column >= len(self.matrix) or done:
                     break
-            r += 1
-            if r >= len(self.matrix):
+            row += 1
+            if row >= len(self.matrix):
                 done = True
 
         return uncovered_zero_row, uncovered_zero_column
@@ -339,11 +341,11 @@ class HungarianSolver:
         Continue in this manner until there are no uncovered zeros left.
         Save the smallest uncovered value and Go to Step 6.
         """
-        row = -1
-        column = -1
+        row = 0
+        column = 0
         done = False
         while not done:
-            row, column = self.find_uncovered_zero(row, column)
+            row, column = self.find_uncovered_zero()
             if row == -1:
                 done = True
                 self.current_step = 6
@@ -367,29 +369,32 @@ class HungarianSolver:
     def find_star_in_column(self, column):
         """Find a starred element in the column. Return -1 if not found.
         """
-        for r in range(len(self.matrix)):
-            if self.mask_matrix[r][column] == self.STARRED:
-                return r
+        for row in range(len(self.matrix)):
+            if self.mask_matrix[row][column] == self.STARRED:
+                return row
         return -1
 
     def find_prime_in_row(self, row):
         """Find a primed element in the row. Return -1 if not found.
         """
-        for c in range(len(self.matrix)):
-            if self.mask_matrix[row][c] == self.PRIMED:
-                return c
+        for column in range(len(self.matrix)):
+            if self.mask_matrix[row][column] == self.PRIMED:
+                return column
         return -1
 
     def augment_path(self, path_count):
         for p in range(path_count):
             p_row = self.path[p][0]
             p_column = self.path[p][1]
-            if self.mask_matrix[p_row][p_column] == self.PRIMED:
+            if self.mask_matrix[p_row][p_column] == self.STARRED:
+                # Unstar each starred zero of the series
                 self.mask_matrix[p_row][p_column] = self.NORMAL
-            else:
-                self.mask_matrix[p_row][p_column] = self.PRIMED
+            elif self.mask_matrix[p_row][p_column] == self.PRIMED:
+                # star each primed zero of the series
+                self.mask_matrix[p_row][p_column] = self.STARRED
 
     def erase_primes(self):
+        """erase all primes"""
         for r in range(len(self.mask_matrix)):
             for c in range(len(self.mask_matrix)):
                 if self.mask_matrix[r][c] == self.PRIMED:
@@ -432,11 +437,12 @@ class HungarianSolver:
                 self.path[path_count][0] = self.path[path_count - 1][0]
                 self.path[path_count][1] = column
 
-        # Augment path
+        # Unstar each starred zero of the series,
+        # star each primed zero of the series
         self.augment_path(path_count)
-        # Clear cover
+        # uncover every line in the matrix
         self.clear_covered()
-        # Erase primes
+        # erase all primes
         self.erase_primes()
 
         self.current_step = 3
@@ -467,11 +473,12 @@ class HungarianSolver:
                 if self.row_covered[r]:
                     # Row is covered, add smallest to it
                     self.matrix[r][c] += smallest
-                if self.column_covered[c]:
+                if not self.column_covered[c]:
                     # Column is covered, substract smallest from it
                     self.matrix[r][c] -= smallest
-                    if self.matrix[r][c] < 0:
+                    if self.matrix[r][c] < -1:
                         raise Exception('Impossible to be negative')
+
         # Back to step 4
         self.current_step = 4
 
