@@ -383,7 +383,7 @@ class HungarianSolver:
         return -1
 
     def augment_path(self, path_count):
-        for p in range(path_count):
+        for p in range(path_count + 1):
             p_row = self.path[p][0]
             p_column = self.path[p][1]
             if self.mask_matrix[p_row][p_column] == self.STARRED:
