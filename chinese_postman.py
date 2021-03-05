@@ -210,6 +210,7 @@ class HungarianSolver:
             self.path.append([])
             for j in range(2 * length):
                 self.path[i].append(0)
+        self.total = -1
 
     def solve(self):
         self.finished = False
@@ -234,8 +235,9 @@ class HungarianSolver:
             print('Column covered', self.column_covered)
             print_matrix(self.matrix)
             print_matrix(self.mask_matrix)
-            time.sleep(PAUSE_DURATION)
+            # time.sleep(PAUSE_DURATION)
         print('HungarianSolver finished.')
+        return self.total
 
     def clear_covered(self):
         for i in range(len(self.matrix)):
@@ -494,6 +496,7 @@ class HungarianSolver:
         for pair in pairs:
             print(pair)
             total += self.original_matrix[pair[0]][pair[1]]
+        self.total = total
         print('Total %s' % total)
         self.finished = True
 
@@ -521,6 +524,37 @@ def sample_hungarian():
     # matrix = compute_hungarian(matrix)
     hs = HungarianSolver(matrix)
     hs.solve()
+
+def test_hungarian():
+    # Example is taken from munkres.py
+    matrices = [
+        # Square
+        ([[400, 150, 400],
+          [400, 450, 600],
+          [300, 225, 300]],
+         850),  # expected cost
+
+        # Square
+        ([[10, 10,  8],
+          [9,  8,  1],
+          [9,  7,  4]],
+         18),
+
+        # Square variant with floating point value
+        ([[10.1, 10.2,  8.3],
+          [9.4,  8.5,  1.6],
+          [9.7,  7.8,  4.9]],
+         19.5),
+
+         ]
+
+    for cost_matrix, expected_total in matrices:
+        # print_matrix(cost_matrix, msg='cost matrix')
+        m = HungarianSolver(cost_matrix)
+        total_cost = m.solve()
+        print(('lowest cost=%s' % total_cost))
+        print(('expected=%s' % expected_total))
+        assert expected_total == total_cost
 
 def print_matrix(
         distance_matrix, column_names=None, row_names=None, first_cell=''):
@@ -569,3 +603,4 @@ if __name__ == "__main__":
     print('Hungarian method')
     sample_hungarian()
     print('fin')
+    test_hungarian()
